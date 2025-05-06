@@ -1,32 +1,45 @@
-
 import streamlit as st
 import pandas as pd
-import joblib
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
-# Load model and encoder
-model = joblib.load("f1_model.pkl")
-encoder = joblib.load("encoder.pkl")
+# 🎯 Title
+st.title("🏁 Formula 1 Race Position Predictor")
 
-st.set_page_config(page_title="F1 Race Prediction Bot", page_icon="🏁")
-st.title("🏎️ F1 Race Position Predictor")
-st.write("Select a driver and constructor to predict finishing position.")
+# 📄 Load dataset
+df = pd.read_csv("f1_clean_dataset.csv")
 
-# Sample options
-drivers = ['Lewis Hamilton', 'Max Verstappen', 'Charles Leclerc', 'Lando Norris']
-constructors = ['Mercedes', 'Red Bull', 'Ferrari', 'McLaren']
+# 🧹 Prepare features and target
+X = df.drop(columns=["positionOrder"])
+y = df["positionOrder"]
 
-driver = st.selectbox("Driver", drivers)
-constructor = st.selectbox("Constructor", constructors)
-grid = st.slider("Grid Position", 1, 20, 5)
-qualifying = st.slider("Qualifying Position", 1, 20, 5)
+# ✂️ Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+# 🔍 Train model live
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+# 🎯 Evaluate
+y_pred = model.predict(X_test)
+acc = accuracy_score(y_test, y_pred)
+st.markdown(f"### ✅ Model Accuracy: **{round(acc*100, 2)}%**")
+
+# 🚦 Driver Prediction
+st.markdown("### 🧠 Predict Race Finish Position")
+
+driver_input = {}
+for col in X.columns:
+    dtype = df[col].dtype
+    if dtype == "object":
+        driver_input[col] = st.selectbox(f"{col}", options=sorted(df[col].unique()))
+    else:
+        driver_input[col] = st.number_input(f"{col}", value=float(df[col].mean()))
+
+# 🔮 Make prediction
 if st.button("Predict Finish Position"):
-    df = pd.DataFrame({
-        'driver_name': [driver],
-        'constructor_name': [constructor],
-        'grid_position': [grid],
-        'qualifying_position': [qualifying]
-    })
-    df_encoded = encoder.transform(df)
-    prediction = model.predict(df_encoded)[0]
-    st.success(f"🏁 Predicted finishing position: **{int(prediction)}**")
+    input_df = pd.DataFrame([driver_input])
+    result = model.predict(input_df)[0]
+    st.success(f"🏆 Predicted Position: **{int(result)}**")
+
