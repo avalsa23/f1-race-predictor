@@ -11,7 +11,8 @@ st.title("🏁 Formula 1 Race Position Predictor")
 df = pd.read_csv("f1_clean_dataset.csv")
 
 # 🧹 Prepare features and target
-X = df.drop(columns=["positionOrder"])
+X = df.drop(columns=["positionOrder"], errors="ignore")
+
 y = df["positionOrder"]
 
 # ✂️ Train-test split
