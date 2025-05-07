@@ -14,7 +14,7 @@ df = pd.read_csv("f1_clean_dataset.csv")
 X = df.drop(columns=[], errors="ignore")  # or just: X = df.copy()
 
 
-y = df["position"]
+y = df["positionorder"]
 
 # ✂️ Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
